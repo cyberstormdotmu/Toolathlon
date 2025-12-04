@@ -8,8 +8,8 @@ WROKERS=10
 # but do not want to explicitly export these environment variables in your shell, 
 # you can also uncomment these lines and set the values here
 # ↓↓↓↓ uncomment these lines ↓↓↓↓
-# TOOLATHLON_OPENAI_BASE_URL="https://openrouter.ai/api/v1"
-# TOOLATHLON_OPENAI_API_KEY="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"
+# TOOLATHLON_OPENAI_BASE_URL="xxx"
+# TOOLATHLON_OPENAI_API_KEY="xxx"
 # export TOOLATHLON_OPENAI_BASE_URL
 # export TOOLATHLON_OPENAI_API_KEY
 
