@@ -38,6 +38,12 @@ async def process_single_request(
                 headers=headers
             )
 
+            # Log detailed info for non-200 responses
+            if llm_resp.status_code != 200:
+                log(f"[Client] ❌ Non-200 status for {request_id}: {llm_resp.status_code}")
+                log(f"[Client] Response headers: {dict(llm_resp.headers)}")
+                log(f"[Client] Response content: {llm_resp.text}")
+
             # Pack complete response
             response_data = {
                 "status_code": llm_resp.status_code,
