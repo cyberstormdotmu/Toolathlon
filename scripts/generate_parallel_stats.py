@@ -46,6 +46,7 @@ def generate_enhanced_stats(dump_path, tasks_folder, temp_config, task_list_file
     # New: based on status.json statistics
     tasks_with_preprocess_done = []
     tasks_with_preprocess_fail = []
+    tasks_with_preprocess_timeout = []
     tasks_with_running_done = []
     tasks_with_running_fail = []
     tasks_with_running_timeout = []
@@ -96,6 +97,8 @@ def generate_enhanced_stats(dump_path, tasks_folder, temp_config, task_list_file
                         tasks_with_preprocess_done.append(task_name)
                     elif preprocess_status == 'fail':
                         tasks_with_preprocess_fail.append(task_name)
+                    elif preprocess_status == 'running':
+                        tasks_with_preprocess_timeout.append(task_name)
 
                     if running_status == 'done':
                         tasks_with_running_done.append(task_name)
@@ -184,8 +187,10 @@ def generate_enhanced_stats(dump_path, tasks_folder, temp_config, task_list_file
             'preprocess': {
                 'done_count': len(tasks_with_preprocess_done),
                 'fail_count': len(tasks_with_preprocess_fail),
+                'timeout_count': len(tasks_with_preprocess_timeout),
                 'done_tasks': sorted(tasks_with_preprocess_done),
-                'fail_tasks': sorted(tasks_with_preprocess_fail)
+                'fail_tasks': sorted(tasks_with_preprocess_fail),
+                'timeout_tasks': sorted(tasks_with_preprocess_timeout)
             },
             'running': {
                 'done_count': len(tasks_with_running_done),
@@ -240,7 +245,7 @@ def generate_enhanced_stats(dump_path, tasks_folder, temp_config, task_list_file
 
     # New: print statistics based on status.json
     print(f'📈 Status breakdown:')
-    print(f'   Preprocess: {len(tasks_with_preprocess_done)} done, {len(tasks_with_preprocess_fail)} fail')
+    print(f'   Preprocess: {len(tasks_with_preprocess_done)} done, {len(tasks_with_preprocess_fail)} fail, {len(tasks_with_preprocess_timeout)} timeout')
     print(f'   Running: {len(tasks_with_running_done)} done, {len(tasks_with_running_fail)} fail, '
           f'{len(tasks_with_running_timeout)} timeout, {len(tasks_with_running_max_turns)} max_turns, {len(tasks_with_running_null)} null')
     print(f'   Evaluation: {len(tasks_with_evaluation_pass)} pass, {len(tasks_with_evaluation_fail)} fail, {len(tasks_with_evaluation_null)} null')

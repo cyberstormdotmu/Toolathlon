@@ -7,12 +7,17 @@ from datetime import datetime, timedelta, timezone
 from email.utils import format_datetime
 import asyncio
 from pathlib import Path
-from utils.general.helper import read_json
+
 # Add utils to path
 sys.path.append(os.path.dirname(__file__))
+
+from utils.general.helper import read_json, print_color
 from configs.token_key_session import all_token_key_session as global_token_key_session
-from utils.general.helper import print_color, fork_repo, forked_repo_to_independent
-from utils.app_specific.github.helper_funcs import get_user_name
+from utils.app_specific.github.api import (
+    github_get_login, github_delete_repo,
+    github_create_user_repo, github_get_repo
+)
+from utils.app_specific.github.git_ops import git_mirror_clone, git_mirror_push
 from utils.app_specific.poste.local_email_manager import LocalEmailManager
 
 file_path = os.path.abspath(__file__)
@@ -156,12 +161,49 @@ async def import_emails_via_mcp(backup_file: str):
             print(f"❌ Email import process failed: unknown error {e}")
             return False
 
-async def prepare_one_repo(source_repo, target_repo, fork_default_branch_only, readonly):
-    github_user = get_user_name(GITHUB_TOKEN)
-    await fork_repo(source_repo, f"{github_user}/{target_repo}", fork_default_branch_only, readonly)
-    tmpdir = Path(os.path.dirname(__file__)) / ".." / "tmp" / target_repo
+async def prepare_one_repo(source_repo, target_repo_name, fork_default_branch_only, readonly):
+    """
+    Prepare a repository by creating an independent copy (not a fork).
+    Directly mirror clone from source and create as independent repo.
+    """
+    import time
+    import shutil
+
+    github_user = github_get_login(GITHUB_TOKEN)
+    target_repo_full = f"{github_user}/{target_repo_name}"
+
+    print(f"Preparing {source_repo} → {target_repo_full}...")
+
+    # Check if target repo exists, delete it if so
+    try:
+        if github_get_repo(GITHUB_TOKEN, github_user, target_repo_name):
+            print(f"Target repo {target_repo_full} exists, deleting it...")
+            github_delete_repo(GITHUB_TOKEN, github_user, target_repo_name)
+            time.sleep(2)
+    except RuntimeError as e:
+        # 404 means repo doesn't exist, which is fine
+        if "404" not in str(e):
+            raise
+
+    # Mirror clone source repo directly
+    tmpdir = Path(os.path.dirname(__file__)) / ".." / "tmp" / target_repo_name
     tmpdir.mkdir(parents=True, exist_ok=True)
-    await forked_repo_to_independent(target_repo, str(tmpdir), False)
+    local_mirror_dir = tmpdir / f"{target_repo_name}.git"
+
+    print(f"Mirror cloning {source_repo}...")
+    await git_mirror_clone(GITHUB_TOKEN, source_repo, str(local_mirror_dir))
+
+    # Create new independent repo
+    print(f"Creating new independent repo {target_repo_full}...")
+    github_create_user_repo(GITHUB_TOKEN, target_repo_name, private=False)
+
+    # Push mirror to new repo
+    print(f"Pushing mirror to {target_repo_full}...")
+    await git_mirror_push(GITHUB_TOKEN, str(local_mirror_dir), target_repo_full)
+
+    # Cleanup
+    shutil.rmtree(tmpdir)
+    print(f"✓ Completed {target_repo_full}")
 
 async def process_emails():
     # Initialize the local email manager

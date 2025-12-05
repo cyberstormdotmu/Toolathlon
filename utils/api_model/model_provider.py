@@ -11,6 +11,9 @@ from agents import (
 )
 from openai import AsyncOpenAI
 from openai.types.responses import ResponseOutputMessage, ResponseOutputText
+from openai.types.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionMessage
+from openai.types.chat.chat_completion import Choice
+
 from configs.global_configs import global_configs
 from addict import Dict
 
@@ -570,12 +573,24 @@ class OpenAIChatCompletionsModelWithRetry(OpenAIChatCompletionsModel):
                 stream=False,
             )
 
+            message: ChatCompletionMessage | None = None
+            first_choice: Choice | None = None
+
+            if response.choices and len(response.choices) > 0:
+                first_choice = response.choices[0]
+                message = first_choice.message
+
             if _debug.DONT_LOG_MODEL_DATA:
                 logger.debug("Received model response")
             else:
-                logger.debug(
-                    f"LLM resp:\n{json.dumps(response.choices[0].message.model_dump(), indent=2)}\n"
-                )
+                if message is not None:
+                    logger.debug(
+                        "LLM resp:\n%s\n",
+                        json.dumps(message.model_dump(), indent=2, ensure_ascii=False),
+                    )
+                else:
+                    finish_reason = first_choice.finish_reason if first_choice else "-"
+                    logger.debug(f"LLM resp had no message. finish_reason: {finish_reason}")
 
             usage = (
                 Usage(
@@ -588,13 +603,15 @@ class OpenAIChatCompletionsModelWithRetry(OpenAIChatCompletionsModel):
                 else Usage()
             )
             if tracing.include_data():
-                span_generation.span_data.output = [response.choices[0].message.model_dump()]
+                span_generation.span_data.output = (
+                    [message.model_dump()] if message is not None else []
+                )
             span_generation.span_data.usage = {
                 "input_tokens": usage.input_tokens,
                 "output_tokens": usage.output_tokens,
             }
 
-            items = ConverterWithExplicitReasoningContent.message_to_output_items(response.choices[0].message)
+            items = ConverterWithExplicitReasoningContent.message_to_output_items(message) if message is not None else []
 
             return ModelResponse(
                 output=items,

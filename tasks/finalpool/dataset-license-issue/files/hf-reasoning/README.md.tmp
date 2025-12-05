@@ -1,7 +1,7 @@
 # Annoy: This should be a paper Title
 
 <p align="left">
-    📑 <a href="https://huggingface.co/papers/xxxx.xxxxx" target="_blank">Paper</a> &nbsp&nbsp | &nbsp&nbsp 🌐 <a href="https://specx.github.io/" target="_blank">Project Page</a> &nbsp&nbsp | &nbsp&nbsp 💾 <a href="https://huggingface.co/collections/mcptester0606/specx-67a978e28fd926b56a4f55a2" target="_blank">Released Resources</a> &nbsp&nbsp | &nbsp&nbsp 📦 <a href="https://github.com/mcptest-user/Annoy" target="_blank">Repo</a> 
+    📑 <a href="https://huggingface.co/papers/xxxx.xxxxx" target="_blank">Paper</a> &nbsp&nbsp | &nbsp&nbsp 🌐 <a href="https://specx.github.io/" target="_blank">Project Page</a> &nbsp&nbsp | &nbsp&nbsp 💾 <a href="https://huggingface.co/collections/toola/specx-67a978e28fd926b56a4f55a2" target="_blank">Released Resources</a> &nbsp&nbsp | &nbsp&nbsp 📦 <a href="https://github.com/toolathlon-testuser/Annoy" target="_blank">Repo</a> 
 
 This is the resource page of the our resources collection on Huggingface, we highlight your currect position with a blue block.
 
@@ -14,11 +14,11 @@ This is the resource page of the our resources collection on Huggingface, we hig
       <tr>
         <td>Annoy-PythonEdu-Rs</td>
         <td style="background-color: #e6f3ff; text-align: center; vertical-align: middle;">
-          <a href="https://huggingface.co/datasets/mcptester0606/Annoy-PyEdu-Rs">🤗</a>
+          <a href="https://huggingface.co/datasets/toola/Annoy-PyEdu-Rs">🤗</a>
         </td>
     </tr>
 </table>
-Please also check the raw data after our processing if you are interested: [mcptester0606/Annoy-PyEdu-Rs-Raw](https://huggingface.co/datasets/mcptester0606/Annoy-PyEdu-Rs-Raw).
+Please also check the raw data after our processing if you are interested: [toola/Annoy-PyEdu-Rs-Raw](https://huggingface.co/datasets/toola/Annoy-PyEdu-Rs-Raw).
 
 **Models**
 <table>
@@ -35,24 +35,24 @@ Please also check the raw data after our processing if you are interested: [mcpt
     </tr>
     <tr>
         <td>Qwen 2.5 7B Coder</td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/qwen2.5-7b-coder_spec_stage1">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/qwen2.5-7b-coder_spec">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/qwen2.5-7b-coder_spec_pp_stage1">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/qwen2.5-7b-coder_spec_pp">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/qwen2.5-7b-coder_spec_stage1">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/qwen2.5-7b-coder_spec">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/qwen2.5-7b-coder_spec_pp_stage1">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/qwen2.5-7b-coder_spec_pp">🤗</a></td>
     </tr>
     <tr>
         <td>LLaMA 3.1 8B</td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/llama3.1-8b_spec_stage1">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/llama3.1-8b_spec">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/llama3.1-8b_spec_pp_stage1">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/llama3.1-8b_spec_pp">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/llama3.1-8b_spec_stage1">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/llama3.1-8b_spec">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/llama3.1-8b_spec_pp_stage1">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/llama3.1-8b_spec_pp">🤗</a></td>
     </tr>
     <tr>
         <td>DeepSeek v2 Lite Coder</td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/dsv2-lite-coder_spec_stage1">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/dsv2-lite-coder_spec">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/dsv2-lite-coder_spec_pp_stage1">🤗</a></td>
-        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/mcptester0606/dsv2-lite-coder_spec_pp">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/dsv2-lite-coder_spec_stage1">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/dsv2-lite-coder_spec">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/dsv2-lite-coder_spec_pp_stage1">🤗</a></td>
+        <td style="text-align: center; vertical-align: middle;"><a href="https://huggingface.co/toola/dsv2-lite-coder_spec_pp">🤗</a></td>
     </tr>
 </table>
 
