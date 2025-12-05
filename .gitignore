@@ -116,3 +116,7 @@ tasks/jl
 tasks/testparallel
 
 vis_traj/trajs
+
+duplicated_page_id.txt
+
+*.tmp
