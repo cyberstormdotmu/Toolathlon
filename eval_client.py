@@ -102,10 +102,10 @@ def ensure_parent_dir(file_path: str):
     if parent and not parent.exists():
         parent.mkdir(parents=True, exist_ok=True)
 
-async def cancel_job_on_server(server_url: str, job_id: str, reason: str = "Client error"):
+async def cancel_job_on_server(server_url: str, job_id: str, reason: str = "Client error", trust_env: bool = False):
     """Cancel job on server (best effort, don't fail if it doesn't work)"""
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, trust_env=trust_env) as client:
             await client.post(
                 f"{server_url}/cancel_job",
                 params={"job_id": job_id}
@@ -120,7 +120,8 @@ async def download_task_if_needed(
     server_url: str,
     job_id: str,
     record_manager: DownloadRecordManager,
-    force: bool = False
+    force: bool = False,
+    trust_env: bool = False
 ):
     """Download a single task if needed"""
     # Check if already downloaded
@@ -135,7 +136,7 @@ async def download_task_if_needed(
 
     try:
         # Download task archive
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=120.0, trust_env=trust_env) as client:
             response = await client.get(
                 f"{server_url}/get_task_archive",
                 params={"job_id": job_id, "task_name": task_name}
@@ -177,13 +178,14 @@ async def download_task_if_needed(
 async def download_static_files(
     output_dir: Path,
     server_url: str,
-    job_id: str
+    job_id: str,
+    trust_env: bool = False
 ):
     """Download all static files from server"""
     log("[Client] Downloading static files...")
 
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=60.0, trust_env=trust_env) as client:
             response = await client.get(
                 f"{server_url}/get_static_files",
                 params={"job_id": job_id}
@@ -263,7 +265,8 @@ async def public_worker(
     server_url: str,
     job_id: str,
     output_dir: str,
-    force_redownload: bool
+    force_redownload: bool,
+    trust_env: bool = False
 ):
     """
     Background worker for public mode
@@ -305,14 +308,14 @@ async def public_worker(
         start_time = time.time()
         server_log_offset = 0
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, trust_env=trust_env) as client:
             while True:
                 elapsed = time.time() - start_time
 
                 # Check timeout
                 if elapsed > TIMEOUT_SECONDS:
                     log(f"ERROR: Task exceeded {TIMEOUT_SECONDS//60} minutes timeout")
-                    await cancel_job_on_server(server_url, job_id, "Timeout")
+                    await cancel_job_on_server(server_url, job_id, "Timeout", trust_env)
                     sys.exit(1)
 
                 # Pull server log
@@ -345,7 +348,7 @@ async def public_worker(
                         for task_name in task_names:
                             await download_task_if_needed(
                                 task_name, output_dir_path, server_url, job_id,
-                                record_manager, force_redownload
+                                record_manager, force_redownload, trust_env
                             )
                 except Exception as e:
                     log(f"Warning: Failed to check/download completed tasks: {e}")
@@ -389,13 +392,13 @@ async def public_worker(
                                 for task_name in task_names:
                                     await download_task_if_needed(
                                         task_name, output_dir_path, server_url, job_id,
-                                        record_manager, force_redownload
+                                        record_manager, force_redownload, trust_env
                                     )
                         except Exception as e:
                             log(f"Warning: Failed to download remaining tasks: {e}")
 
                         # Download static files
-                        await download_static_files(output_dir_path, server_url, job_id)
+                        await download_static_files(output_dir_path, server_url, job_id, trust_env)
 
                         log(f"All results saved to: {output_dir}")
                         log("="*60)
@@ -432,13 +435,13 @@ async def public_worker(
 
     except KeyboardInterrupt:
         log("\n!!! Client interrupted by user (Ctrl+C)")
-        await cancel_job_on_server(server_url, job_id, "Client interrupted")
+        await cancel_job_on_server(server_url, job_id, "Client interrupted", trust_env)
         sys.exit(1)
     except Exception as e:
         log(f"\n!!! FATAL ERROR in client: {e}")
         import traceback
         log(traceback.format_exc())
-        await cancel_job_on_server(server_url, job_id, f"Client error: {e}")
+        await cancel_job_on_server(server_url, job_id, f"Client error: {e}", trust_env)
         sys.exit(1)
 
 async def private_worker(
@@ -449,7 +452,8 @@ async def private_worker(
     vllm_api_key: Optional[str],
     ws_proxy_port: int,
     output_dir: str,
-    force_redownload: bool
+    force_redownload: bool,
+    trust_env: bool = False
 ):
     """
     Background worker for private mode
@@ -530,7 +534,7 @@ async def private_worker(
             """Poll job status and sync server log"""
             nonlocal should_exit, exit_code, server_log_offset
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=30.0, trust_env=trust_env) as client:
                 while not should_exit:
                     try:
                         elapsed = time.time() - start_time
@@ -538,7 +542,7 @@ async def private_worker(
                         # Check timeout
                         if elapsed > TIMEOUT_SECONDS:
                             log(f"ERROR: Task exceeded {TIMEOUT_SECONDS//60} minutes timeout")
-                            await cancel_job_on_server(server_url, job_id, "Timeout")
+                            await cancel_job_on_server(server_url, job_id, "Timeout", trust_env)
                             should_exit = True
                             exit_code = 1
                             return
@@ -573,7 +577,7 @@ async def private_worker(
                                 for task_name in task_names:
                                     await download_task_if_needed(
                                         task_name, output_dir_path, server_url, job_id,
-                                        record_manager, force_redownload
+                                        record_manager, force_redownload, trust_env
                                     )
                         except Exception as e:
                             log(f"Warning: Failed to check/download completed tasks: {e}")
@@ -616,13 +620,13 @@ async def private_worker(
                                     for task_name in task_names:
                                         await download_task_if_needed(
                                             task_name, output_dir_path, server_url, job_id,
-                                            record_manager, force_redownload
+                                            record_manager, force_redownload, trust_env
                                         )
                             except Exception as e:
                                 log(f"Warning: Failed to download remaining tasks: {e}")
 
                             # Download static files
-                            await download_static_files(output_dir_path, server_url, job_id)
+                            await download_static_files(output_dir_path, server_url, job_id, trust_env)
 
                             log(f"All results saved to: {output_dir}")
                             log("="*60)
@@ -670,13 +674,13 @@ async def private_worker(
 
     except KeyboardInterrupt:
         log("\n!!! Client interrupted by user (Ctrl+C)")
-        await cancel_job_on_server(server_url, job_id, "Client interrupted")
+        await cancel_job_on_server(server_url, job_id, "Client interrupted", trust_env)
         sys.exit(1)
     except Exception as e:
         log(f"\n!!! FATAL ERROR in client: {e}")
         import traceback
         log(traceback.format_exc())
-        await cancel_job_on_server(server_url, job_id, f"Client error: {e}")
+        await cancel_job_on_server(server_url, job_id, f"Client error: {e}", trust_env)
         sys.exit(1)
     finally:
         # Kill WebSocket client if running
@@ -755,6 +759,10 @@ def run(
     provider: str = typer.Option(
         "unified",
         help="Model provider type. Supported values: 'unified' (default, OpenAI-compatible API), 'openai_stateful_responses' (OpenAI Responses API with stateful context management)"
+    ),
+    trust_env_in_httpx: bool = typer.Option(
+        False,
+        help="If enabled, httpx will trust environment proxy settings (HTTP_PROXY, HTTPS_PROXY, etc.)"
     ),
 ):
     """
@@ -963,7 +971,7 @@ def run(
     try:
         import httpx
 
-        with httpx.Client(timeout=30.0) as client:
+        with httpx.Client(timeout=30.0, trust_env=trust_env_in_httpx) as client:
             submit_data = {
                 "client_version": CLIENT_VERSION,  # Send client version for compatibility check
                 "mode": mode,
@@ -1098,7 +1106,7 @@ import asyncio
 import sys
 sys.path.insert(0, '{os.path.abspath(os.path.dirname(__file__))}')
 from eval_client import public_worker
-asyncio.run(public_worker('{server_url}', '{final_job_id}', '{output_dir}', {force_redownload}))
+asyncio.run(public_worker('{server_url}', '{final_job_id}', '{output_dir}', {force_redownload}, {trust_env_in_httpx}))
 """
     else:  # private
         api_key_arg = f"'{api_key}'" if api_key else "None"
@@ -1107,7 +1115,7 @@ import asyncio
 import sys
 sys.path.insert(0, '{os.path.abspath(os.path.dirname(__file__))}')
 from eval_client import private_worker
-asyncio.run(private_worker('{server_url}', '{final_job_id}', '{client_id}', '{base_url}', {api_key_arg}, {ws_proxy_port}, '{output_dir}', {force_redownload}))
+asyncio.run(private_worker('{server_url}', '{final_job_id}', '{client_id}', '{base_url}', {api_key_arg}, {ws_proxy_port}, '{output_dir}', {force_redownload}, {trust_env_in_httpx}))
 """
 
     # Start detached background process
