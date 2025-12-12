@@ -24,6 +24,8 @@ configs/google_credentials.json
 configs/gcp-service_account.keys.json
 configs/gcp-oauth.keys.json
 configs/notion_state.json
+configs/snowflake_rsa_key.p8
+configs/snowflake_rsa_key.pub
 
 deployment/k8s/
 ruige

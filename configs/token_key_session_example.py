@@ -16,6 +16,12 @@ if google_credentials_filename is not None:
 else:
     google_credentials = {}
 
+if os.path.exists("./configs/snowflake_rsa_key.p8"):
+    # take abs path of the file
+    snowflake_private_key_path = os.path.abspath("./configs/snowflake_rsa_key.p8")
+else:
+    print("No snowflake private key file found! This is only expected in quickstart mode!")
+    snowflake_private_key_path = None
 
 all_token_key_session = Dict(
     timezone = "Asia/Hong_Kong",
@@ -68,7 +74,7 @@ all_token_key_session = Dict(
     snowflake_warehouse = "COMPUTE_WH", # usually `COMPUTE_WH`
     snowflake_role = "ACCOUNTADMIN", # TO BE FILLED
     snowflake_user = "XX", # TO BE FILLED
-    snowflake_password = "XX", # TO BE FILLED
+    snowflake_private_key_path = snowflake_private_key_path, # TO BE FILLED
     snowflake_database = "SNOWFLAKE", # we prefill `SNOWFLAKE` here to make compatibility
     snowflake_schema = "PUBLIC", # we prefill `PUBLIC` here to make compatibility
     snowflake_op_allowed_databases = "null", # KEEP_IT_ASIS_CUZ_IT_WILL_BE_RESET_IN_TASK_SPECIFIC_DIR

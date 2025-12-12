@@ -109,6 +109,37 @@ Finally, similar to the above steps, create an intrgration key for evaluation us
 
 
 #### SnowFlake Account
-We recommand register a new Snowflake account (see https://signup.snowflake.com/). After you have created and activated the account. Find your account details and fill them into the `snowflake_account`, `snowflake_role`, `snowflake_user` and `snowflake_password` variables in `configs/token_key_session.py`
+We recommand register a new Snowflake account (see https://signup.snowflake.com/). After you have created and activated the account. Find your account details and fill them into the `snowflake_account`, `snowflake_role`, and `snowflake_user` variables in `configs/token_key_session.py`
 ![](./figures/snowflake_part1.png)
 ![](./figures/snowflake_part2.png)
+We also need to generate a private key for the snowflake account, you can do this by running the following:
+
+```
+# generate a private key
+openssl genrsa 2048 | openssl pkcs8 -topk8 -v2 des3 -inform PEM -out ./configs/snowflake_rsa_key.p8 -nocrypt
+# generate a public key
+openssl rsa -in ./configs/snowflake_rsa_key.p8 -pubout -out ./configs/snowflake_rsa_key.pub
+# show the public key
+cat ./configs/snowflake_rsa_key.pub | grep -v "BEGIN PUBLIC KEY" | grep -v "END PUBLIC KEY" | tr -d '\n'
+```
+then login to your snowflake and configure the shown public key in the snowflake console：
+1. create a new SQL file
+![](./figures/snowflake_part3.png)
+2. enter the following SQL command after replacing `YOUR_USERNAME` with your snowflake username
+    ```sql
+    ALTER USER YOUR_USERNAME SET RSA_PUBLIC_KEY='MIIBIjANBg...（paste the public key you generated above）';
+    ```
+    ![](./figures/snowflake_part4.png)
+3. check the public key by running the following SQL command after replacing `YOUR_USERNAME` with your snowflake username
+    ```sql
+    DESC USER YOUR_USERNAME;
+    ```
+    ![](./figures/snowflake_part5.png)
+    you will find the public key in the `RSA_PUBLIC_KEY` column and also the `RSA_PUBLIC_KEY_FP` is filled as well.
+
+
+
+
+
+
+
