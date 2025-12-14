@@ -133,12 +133,13 @@ Although you can indeed run our benchmark without sudo, some configurations stil
 ### Configure App-Aware Tokens, Keys and Credentials
 Please read carefully through [how2register_accounts.md](global_preparation/how2register_accounts.md) and follow the guides. You need to register some accounts and configure some tokens/api keys/secrets in `configs/token_key_session.py`. 
 
-### Misc Configuration
+<!-- THIS STEP HAS BEEN DEPRECATED! -->
+<!-- ### Misc Configuration
 
 Simply run the following:
 ```
 bash global_preparation/misc_configuartion.sh
-```
+``` -->
 
 ### Deploy Needed Apps
 ```
