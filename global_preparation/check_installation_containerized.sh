@@ -249,6 +249,7 @@ fi
 echo "Testing Kind connection..."
 if $CONTAINER_RUNTIME exec --env DOCKER_API_VERSION=1.44 "$CONTAINER_NAME" $CONTAINER_RUNTIME version >/dev/null 2>&1; then
     echo "✓ $CONTAINER_RUNTIME API accessible"
+fi
 
 # Test Docker socket accessibility from inside the container
 echo "Testing Docker socket accessibility..."
