@@ -7,7 +7,7 @@ Supports both public API mode and private (local vLLM) mode.
 """
 
 # Version control
-CLIENT_VERSION = "1.1"
+CLIENT_VERSION = "1.2"
 
 import asyncio
 import json
@@ -26,6 +26,12 @@ from urllib.parse import urlparse
 
 import httpx
 import typer
+
+# Import WS client version for private mode validation
+try:
+    from simple_client_ws import WS_CLIENT_VERSION
+except ImportError:
+    WS_CLIENT_VERSION = None  # Fallback if file not found
 
 app = typer.Typer(help="Toolathlon Remote Evaluation Client")
 
@@ -515,6 +521,7 @@ async def private_worker(
         # Start simple_client_ws.py
         log(f"[WS] Starting WebSocket client...")
         log(f"[WS] Connecting to: {ws_server_url}")
+        log(f"[WS] Job ID: {job_id}")
         ws_client_log = str(Path(log_file).parent / "ws_client.log")
 
         with open(ws_client_log, 'w') as log_f:
@@ -523,6 +530,7 @@ async def private_worker(
                 "--server-url", ws_server_url,
                 "--llm-base-url", vllm_url,
                 "--llm-api-key", vllm_api_key or "",
+                "--job-id", job_id,  # Pass job_id for authentication
                 stdout=log_f,
                 stderr=asyncio.subprocess.STDOUT
             )
@@ -983,6 +991,10 @@ def run(
                 "skip_container_restart": skip_container_restart,
                 "provider": provider  # Add provider field (v1.1+)
             }
+
+            # Add ws_client_version if in private mode
+            if mode == "private" and WS_CLIENT_VERSION:
+                submit_data["ws_client_version"] = WS_CLIENT_VERSION
 
             # Add model_params if provided
             if model_params:

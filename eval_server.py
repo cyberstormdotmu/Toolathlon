@@ -7,8 +7,9 @@ Only one task can run at a time, with IP rate limiting (3 tasks per 24 hours).
 """
 
 # Version control
-SERVER_VERSION = "1.1"
-SUPPORTED_CLIENT_VERSIONS = ["1.1"]  # List of supported client versions
+SERVER_VERSION = "1.2"
+SUPPORTED_CLIENT_VERSIONS = ["1.2"]  # List of supported client versions
+SUPPORTED_WS_CLIENT_VERSIONS = ["1.2"]  # List of supported WS client versions
 
 import asyncio
 import os
@@ -73,6 +74,7 @@ class SubmitEvaluationRequest(BaseModel):
     task_list_content: Optional[str] = None  # Task list file content (each line is a task name)
     skip_container_restart: bool = False  # Skip container restart (for debugging/testing only)
     provider: str = "unified"  # Model provider (default: "unified" for backward compatibility with v1.0 clients)
+    ws_client_version: Optional[str] = None  # WebSocket client version (required for private mode in v1.2+)
 
 class SubmitEvaluationResponse(BaseModel):
     status: str
@@ -669,6 +671,31 @@ async def submit_evaluation(request: Request, data: SubmitEvaluationRequest):
             }
         )
 
+    # Validate WS client version for private mode (v1.2+)
+    if data.mode == "private":
+        if data.ws_client_version is None:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "WebSocket client version missing",
+                    "message": "Private mode requires WebSocket client version (v1.2+). Your client files may be outdated.",
+                    "server_version": SERVER_VERSION,
+                    "action": "Please update your client files from https://github.com/hkust-nlp/Toolathlon"
+                }
+            )
+
+        if data.ws_client_version not in SUPPORTED_WS_CLIENT_VERSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "WebSocket client version not supported",
+                    "message": f"WebSocket client version '{data.ws_client_version}' is not compatible with server version '{SERVER_VERSION}'.",
+                    "your_ws_client_version": data.ws_client_version,
+                    "supported_ws_client_versions": SUPPORTED_WS_CLIENT_VERSIONS,
+                    "action": "Please update simple_client_ws.py from https://github.com/hkust-nlp/Toolathlon"
+                }
+            )
+
     # Generate or use custom job_id
     warning_msg = None
     if data.custom_job_id:
@@ -831,6 +858,32 @@ async def poll_job_status(job_id: str):
         response["error"] = current_job.get("error", "Unknown error")
 
     return response
+
+@app.get("/internal/validate_job")
+async def validate_job(job_id: str, request: Request):
+    """
+    Internal endpoint to validate if a job_id is currently running.
+    Only accessible from localhost for security.
+    Used by WebSocket proxy to authenticate connections.
+    """
+    # Security: Only allow localhost
+    client_host = request.client.host if request.client else "unknown"
+    if client_host not in ["127.0.0.1", "localhost", "::1"]:
+        raise HTTPException(status_code=403, detail="Access denied: localhost only")
+
+    # Check if this job_id matches the current running job
+    if current_job and current_job.get("job_id") == job_id:
+        return {
+            "valid": True,
+            "job_id": job_id,
+            "mode": current_job.get("mode"),
+            "started_at": current_job.get("started_at")
+        }
+    else:
+        return {
+            "valid": False,
+            "message": "No active job with this ID"
+        }
 
 @app.get("/get_server_log")
 async def get_server_log(job_id: str, offset: int = 0):

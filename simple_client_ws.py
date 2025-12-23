@@ -3,6 +3,10 @@
 WebSocket Client (Production)
 Persistent connection to Server, receive requests and process them
 """
+
+# Version control
+WS_CLIENT_VERSION = "1.2"
+
 import asyncio
 import httpx
 import argparse
@@ -199,15 +203,20 @@ async def process_and_respond(websocket, req: dict, llm_base_url: str, llm_api_k
         # Mark task as done
         request_queue.task_done()
 
-async def main(server_url: str, llm_base_url: str, llm_api_key: str):
+async def main(server_url: str, llm_base_url: str, llm_api_key: str, job_id: str = None):
     print("="*50)
     print("WebSocket Proxy Client (Production)")
+    print(f"Version: {WS_CLIENT_VERSION}")
     print(f"Server URL: {server_url}")
     print(f"Real LLM URL: {llm_base_url}")
+    if job_id:
+        print(f"Job ID: {job_id}")
     print("="*50)
 
-    # Convert HTTP URL to WebSocket URL
+    # Convert HTTP URL to WebSocket URL and add job_id parameter
     ws_url = server_url.replace("http://", "ws://").replace("https://", "wss://") + "/ws"
+    if job_id:
+        ws_url += f"?job_id={job_id}"
 
     # Reconnect exponential backoff parameters
     retry_delay = 5  # Initial 5 seconds
@@ -221,7 +230,7 @@ async def main(server_url: str, llm_base_url: str, llm_api_key: str):
         request_queue = asyncio.Queue()
 
         try:
-            log(f"[Client] Connected to WebSocket: {ws_url}")
+            log(f"[Client] Connecting to WebSocket: {ws_url}")
             # Underlying WebSocket ping/pong timeout changed to 120 seconds (originally 10 seconds)
             # This allows for Server short-term busy or network jitter
             async with connect(ws_url, ping_interval=20, ping_timeout=120) as websocket:
@@ -310,6 +319,8 @@ if __name__ == "__main__":
     parser.add_argument("--server-url", required=True, help="Server URL (e.g., http://47.253.6.47:8080)")
     parser.add_argument("--llm-base-url", required=True, help="Real LLM base URL (e.g., https://api.deepseek.com/v1)")
     parser.add_argument("--llm-api-key", required=True, help="Real LLM API key")
+    parser.add_argument("--job-id", required=False, help="Job ID for authentication (required by server)")
 
     args = parser.parse_args()
-    asyncio.run(main(args.server_url, args.llm_base_url, args.llm_api_key))
+    asyncio.run(main(args.server_url, args.llm_base_url, args.llm_api_key, args.job_id))
+
