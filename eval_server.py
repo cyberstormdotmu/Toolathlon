@@ -1419,7 +1419,42 @@ Output directory: {DUMPS_DIR}
         log("[Server] Started background cleanup task (runs every 24 hours)")
 
     try:
-        uvicorn.run(app, host="0.0.0.0", port=server_port)
+        # Configure uvicorn logging with timestamps
+        import logging
+
+        # Custom formatter with timestamps (local + UTC)
+        class TimestampFormatter(logging.Formatter):
+            def format(self, record):
+                local_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+                utc_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+                record.timestamp = f"[{local_time}][UTC {utc_time}]"
+                return super().format(record)
+
+        # Configure uvicorn log format
+        log_config = {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "default": {
+                    "()": TimestampFormatter,
+                    "fmt": "%(timestamp)s %(levelname)s:     %(message)s",
+                },
+            },
+            "handlers": {
+                "default": {
+                    "formatter": "default",
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://sys.stderr",
+                },
+            },
+            "loggers": {
+                "uvicorn": {"handlers": ["default"], "level": "INFO"},
+                "uvicorn.error": {"level": "INFO"},
+                "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            },
+        }
+
+        uvicorn.run(app, host="0.0.0.0", port=server_port, log_config=log_config)
     except KeyboardInterrupt:
         cleanup_on_shutdown()
         print("\nExiting...")
