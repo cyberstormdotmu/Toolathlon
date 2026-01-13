@@ -6,6 +6,12 @@
 # Usage:
 #   see global_preparation/apply_port_numbers.py
 
+# Instance prefix for task container names (e.g., "alpha-", "beta-", "service1-")
+# Used to isolate containers between different eval server instances
+# Container names will be: {instance_prefix}toolathlon-{task}-{timestamp}
+# Leave empty ("") to use default "toolathlon-" prefix
+instance_prefix: ""
+
 # Instance suffix for container names
 # we suggest -inst-alpha, -inst-beta ... naming like this. 
 # Note that `-` and upper cases are not allowed!
